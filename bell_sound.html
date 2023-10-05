@@ -1,0 +1,96 @@
+<html>
+    <head>
+        <title>
+            Bell Sound
+        </title>
+        <script>
+            function ringBell() {
+                // Create an AudioContext
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                // Create an Oscillator
+                const oscillator = audioContext.createOscillator();
+                oscillator.type = 'sine'; // You can experiment with different waveform types
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // Adjust the frequency for the desired pitch (e.g., C5)
+
+                // Create an Envelope
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                // Define the envelope
+                const attackTime = 0.02; // Time in seconds for the sound to reach full volume
+                const decayTime = 0.5; // Time in seconds for the sound to decay to sustain level
+                const sustainLevel = 0.1; // Level at which the sound sustains after the decay
+                const releaseTime = 1.0; // Time in seconds for the sound to fade out after releasing
+
+                // Set up the envelope
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + attackTime);
+                gainNode.gain.exponentialRampToValueAtTime(sustainLevel, audioContext.currentTime + attackTime + decayTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + attackTime + decayTime + releaseTime);
+
+                // Start the oscillator and envelope
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + attackTime + decayTime + releaseTime);
+
+                // Adjust the duration to control how long the bell sound lasts
+                const duration = attackTime + decayTime + releaseTime;
+
+                // Schedule the audio context to close after the bell sound finishes
+                setTimeout(() => {
+                audioContext.close();
+                }, duration * 1000); // Convert duration to milliseconds
+            }
+
+            function ringTheTibetanBell() {
+                // Create an AudioContext
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                // Create an Oscillator for the bell sound
+                const oscillator = audioContext.createOscillator();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+
+                // Create a Filter for the bell sound
+                const filter = audioContext.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.Q.value = 5;
+                oscillator.connect(filter);
+
+                // Create a Gain Node for the bell sound
+                const gainNode = audioContext.createGain();
+                filter.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                // Define the envelope for the bell sound with a slower release
+                const attackTime = 0.02;
+                const decayTime = 40.0;
+                const sustainLevel = 0.5;
+                const releaseTime = 40.0; // Increase the release time for a slower fade-out
+
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + attackTime);
+                gainNode.gain.exponentialRampToValueAtTime(sustainLevel, audioContext.currentTime + attackTime + decayTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + attackTime + decayTime + releaseTime);
+
+                // Start the oscillator and envelope for the bell sound
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + attackTime + decayTime + releaseTime);
+
+                // Adjust the duration to control how long the bell sound lasts
+                const duration = attackTime + decayTime + releaseTime;
+
+                // Schedule the audio context to close after the bell sound finishes
+                setTimeout(() => {
+                audioContext.close();
+                }, duration * 1000); // Convert duration to milliseconds
+
+            }
+
+        </script>
+    </head>
+    <body>
+        <button onclick="ringTheTibetanBell()">Ring the bell</button>
+    </body>
+</html>
