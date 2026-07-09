@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Blog | Ayush Raj</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Blog posts by Ayush Raj on software, game development, and technology.">
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="blog.css">
+  <style>
+    body, h1, h2, h3, h4, h5, h6 { font-family: "Lato", sans-serif; }
+    .w3-bar, h1, button { font-family: "Montserrat", sans-serif; }
+  </style>
+</head>
+<body>
+  <div class="w3-top">
+    <div class="w3-bar w3-light-grey w3-card w3-left-align w3-large">
+      <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-padding-large w3-hover-white w3-large w3-light-grey" href="javascript:void(0);" onclick="toggleNav()" title="Toggle Navigation Menu"><i class="fa fa-bars"></i></a>
+      <a href="../index.html" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Home</a>
+      <a href="index.html" class="w3-bar-item w3-button w3-padding-large w3-white">Blog</a>
+      <a href="https://redseed.cc" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">Redseed Game Studio</a>
+    </div>
+
+    <div id="navDemo" class="w3-bar-block w3-light-grey w3-hide w3-hide-large w3-hide-medium w3-large">
+      <a href="../index.html" class="w3-bar-item w3-button w3-padding-large">Home</a>
+      <a href="index.html" class="w3-bar-item w3-button w3-padding-large">Blog</a>
+      <a href="https://redseed.cc" class="w3-bar-item w3-button w3-padding-large">Redseed Game Studio</a>
+    </div>
+  </div>
+
+  <main class="blog-shell">
+    <header class="blog-header">
+      <h1>Blog</h1>
+      <p>Posts from <a href="https://ayushraj1024.blogspot.com/" target="_blank" rel="noopener noreferrer">ayushraj1024.blogspot.com</a></p>
+    </header>
+
+    <div id="status" class="status-box">Loading posts...</div>
+    <section id="posts"></section>
+    <nav id="pagination" class="pagination" hidden></nav>
+  </main>
+
+  <footer class="w3-container w3-padding-32 w3-center" style="color: #b0b0b0;">
+    <p>Copyright © <span id="year"></span> Ayush Raj</p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="blogger.js"></script>
+  <script>
+    function toggleNav() {
+      var nav = document.getElementById("navDemo");
+      if (nav.className.indexOf("w3-show") === -1) {
+        nav.className += " w3-show";
+      } else {
+        nav.className = nav.className.replace(" w3-show", "");
+      }
+    }
+
+    function renderLabels(labels) {
+      if (!labels.length) {
+        return "";
+      }
+      return '<div class="label-row">' + labels.slice(0, 5).map(function (label) {
+        return '<span class="label-chip">' + escapeHtml(label) + "</span>";
+      }).join("") + "</div>";
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function renderPosts(posts) {
+      var container = document.getElementById("posts");
+      if (!posts.length) {
+        container.innerHTML = "";
+        return;
+      }
+
+      container.innerHTML = posts.map(function (post) {
+        var excerpt = post.excerpt ? escapeHtml(post.excerpt) + (post.excerpt.length >= 220 ? "..." : "") : "";
+        return (
+          '<article class="post-card">' +
+            "<h2><a href=\"" + BloggerFeed.buildPostUrl(post.id) + "\">" + escapeHtml(post.title) + "</a></h2>" +
+            '<div class="post-meta">' + escapeHtml(BloggerFeed.formatDate(post.published)) + "</div>" +
+            (excerpt ? '<p class="post-excerpt">' + excerpt + "</p>" : "") +
+            '<a class="read-more" href="' + BloggerFeed.buildPostUrl(post.id) + '">Read post</a>' +
+            renderLabels(post.labels) +
+          "</article>"
+        );
+      }).join("");
+    }
+
+    function renderPagination(result, page, totalPages) {
+      var nav = document.getElementById("pagination");
+      if (totalPages <= 1) {
+        nav.hidden = true;
+        return;
+      }
+
+      nav.hidden = false;
+      var prevPage = page > 1 ? page - 1 : null;
+      var nextPage = page < totalPages ? page + 1 : null;
+
+      nav.innerHTML =
+        (prevPage
+          ? '<a href="' + BloggerFeed.buildPageUrl(prevPage) + '">&larr; Newer posts</a>'
+          : '<span class="disabled">&larr; Newer posts</span>') +
+        "<span>Page " + page + " of " + totalPages + "</span>" +
+        (nextPage
+          ? '<a href="' + BloggerFeed.buildPageUrl(nextPage) + '">Older posts &rarr;</a>'
+          : '<span class="disabled">Older posts &rarr;</span>');
+    }
+
+    function loadPosts() {
+      var config = window.BLOG_CONFIG;
+      var page = BloggerFeed.getPageFromQuery(1);
+      var startIndex = ((page - 1) * config.postsPerPage) + 1;
+      var status = document.getElementById("status");
+
+      status.textContent = "Loading posts...";
+      status.hidden = false;
+
+      BloggerFeed.fetchPosts({
+        maxResults: config.postsPerPage,
+        startIndex: startIndex,
+      }).then(function (result) {
+        var totalPages = Math.max(1, Math.ceil(result.total / config.postsPerPage));
+        if (page > totalPages) {
+          window.location.replace(BloggerFeed.buildPageUrl(totalPages));
+          return;
+        }
+
+        status.hidden = true;
+        renderPosts(result.posts);
+        renderPagination(result, page, totalPages);
+      }).catch(function (error) {
+        status.textContent = error.message || "Could not load blog posts.";
+      });
+    }
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+    loadPosts();
+  </script>
+</body>
+</html>

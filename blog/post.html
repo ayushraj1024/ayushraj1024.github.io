@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Post | Ayush Raj</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="blog.css">
+  <style>
+    body, h1, h2, h3, h4, h5, h6 { font-family: "Lato", sans-serif; }
+    .w3-bar, h1, button { font-family: "Montserrat", sans-serif; }
+  </style>
+</head>
+<body>
+  <div class="w3-top">
+    <div class="w3-bar w3-light-grey w3-card w3-left-align w3-large">
+      <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-padding-large w3-hover-white w3-large w3-light-grey" href="javascript:void(0);" onclick="toggleNav()" title="Toggle Navigation Menu"><i class="fa fa-bars"></i></a>
+      <a href="../index.html" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Home</a>
+      <a href="index.html" class="w3-bar-item w3-button w3-padding-large w3-white">Blog</a>
+      <a href="https://redseed.cc" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">Redseed Game Studio</a>
+    </div>
+
+    <div id="navDemo" class="w3-bar-block w3-light-grey w3-hide w3-hide-large w3-hide-medium w3-large">
+      <a href="../index.html" class="w3-bar-item w3-button w3-padding-large">Home</a>
+      <a href="index.html" class="w3-bar-item w3-button w3-padding-large">Blog</a>
+      <a href="https://redseed.cc" class="w3-bar-item w3-button w3-padding-large">Redseed Game Studio</a>
+    </div>
+  </div>
+
+  <main class="blog-shell">
+    <a class="back-link" href="index.html">&larr; Back to blog</a>
+    <div id="status" class="status-box">Loading post...</div>
+    <article id="post" class="post-article" hidden></article>
+  </main>
+
+  <footer class="w3-container w3-padding-32 w3-center" style="color: #b0b0b0;">
+    <p>Copyright © <span id="year"></span> Ayush Raj</p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="blogger.js"></script>
+  <script>
+    function toggleNav() {
+      var nav = document.getElementById("navDemo");
+      if (nav.className.indexOf("w3-show") === -1) {
+        nav.className += " w3-show";
+      } else {
+        nav.className = nav.className.replace(" w3-show", "");
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function renderLabels(labels) {
+      if (!labels.length) {
+        return "";
+      }
+      return '<div class="label-row">' + labels.map(function (label) {
+        return '<span class="label-chip">' + escapeHtml(label) + "</span>";
+      }).join("") + "</div>";
+    }
+
+    function getPostIdFromQuery() {
+      var params = new URLSearchParams(window.location.search);
+      return (params.get("id") || "").trim();
+    }
+
+    function loadPost() {
+      var postId = getPostIdFromQuery();
+      var status = document.getElementById("status");
+      var article = document.getElementById("post");
+
+      if (!postId) {
+        status.textContent = "Missing post id in URL.";
+        return;
+      }
+
+      BloggerFeed.fetchPostById(postId).then(function (post) {
+        document.title = post.title + " | Ayush Raj";
+        status.hidden = true;
+        article.hidden = false;
+        article.innerHTML =
+          "<h1>" + escapeHtml(post.title) + "</h1>" +
+          '<div class="post-meta">' + escapeHtml(BloggerFeed.formatDate(post.published)) + "</div>" +
+          renderLabels(post.labels) +
+          '<div class="post-content">' + post.contentHtml + "</div>" +
+          (post.url
+            ? '<p style="margin-top: 24px;"><a href="' + escapeHtml(post.url) + '" target="_blank" rel="noopener noreferrer">View on Blogger</a></p>'
+            : "");
+      }).catch(function (error) {
+        status.textContent = error.message || "Could not load this post.";
+      });
+    }
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+    loadPost();
+  </script>
+</body>
+</html>

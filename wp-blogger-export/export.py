@@ -11,7 +11,10 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
+
+from blogger_labels import sanitize_blogger_labels
 
 
 DEFAULT_SITE = "ayushraj.dev"
@@ -90,6 +93,17 @@ def parse_args() -> argparse.Namespace:
         action="store_false",
         help="Do not prepend featured image HTML",
     )
+    parser.add_argument(
+        "--incremental",
+        action="store_true",
+        help="Skip WordPress posts already present in the output file",
+    )
+    parser.add_argument(
+        "--delta-output",
+        type=Path,
+        default=None,
+        help="Write only newly found posts to this file (optional)",
+    )
     return parser.parse_args()
 
 
@@ -149,19 +163,16 @@ def to_rfc3339_utc(date_gmt: str) -> str:
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def unique_labels(labels: list[str]) -> list[str]:
-    seen: set[str] = set()
-    result: list[str] = []
-    for label in labels:
-        cleaned = label.strip()
-        if not cleaned:
-            continue
-        key = cleaned.casefold()
-        if key in seen:
-            continue
-        seen.add(key)
-        result.append(cleaned)
-    return result
+def build_labels(
+    post: dict[str, Any],
+    category_map: dict[int, str],
+    tag_map: dict[int, str],
+    include_tags: bool,
+) -> list[str]:
+    labels = [category_map[cid] for cid in post.get("categories", []) if cid in category_map]
+    if include_tags:
+        labels.extend(tag_map[tid] for tid in post.get("tags", []) if tid in tag_map)
+    return sanitize_blogger_labels(labels)
 
 
 def maybe_prepend_featured_image(content: str, image_url: str | None) -> str:
@@ -173,18 +184,6 @@ def maybe_prepend_featured_image(content: str, image_url: str | None) -> str:
         f'<p><img src="{html.escape(image_url, quote=True)}" alt="" /></p>\n'
         f"{content}"
     )
-
-
-def build_labels(
-    post: dict[str, Any],
-    category_map: dict[int, str],
-    tag_map: dict[int, str],
-    include_tags: bool,
-) -> list[str]:
-    labels = [category_map[cid] for cid in post.get("categories", []) if cid in category_map]
-    if include_tags:
-        labels.extend(tag_map[tid] for tid in post.get("tags", []) if tid in tag_map)
-    return unique_labels(labels)
 
 
 def blogger_insert_url(blog_id: str | None, is_draft: bool, fetch_images: bool) -> str:
@@ -271,8 +270,36 @@ def transform_post(
     }
 
 
-def export_posts(args: argparse.Namespace) -> dict[str, Any]:
+def load_existing_export(output_path: Path) -> tuple[list[dict[str, Any]], set[int]]:
+    if not output_path.exists():
+        return [], set()
+
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    posts = payload.get("posts", [])
+    known_ids = {int(post["wordpress"]["id"]) for post in posts}
+    return posts, known_ids
+
+
+def write_export(output_path: Path, payload: dict[str, Any]) -> None:
+    with open(output_path, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, ensure_ascii=False, indent=2)
+        handle.write("\n")
+
+
+def export_posts(args: argparse.Namespace) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     base_url = f"https://{args.site.strip('/')}"
+    output_path = Path(args.output)
+
+    existing_posts: list[dict[str, Any]] = []
+    known_ids: set[int] = set()
+    if args.incremental:
+        existing_posts, known_ids = load_existing_export(output_path)
+        if known_ids:
+            print(
+                f"Incremental mode: {len(known_ids)} posts already in {output_path}",
+                file=sys.stderr,
+            )
+
     print(f"Fetching taxonomies from {base_url}...", file=sys.stderr)
     category_map, tag_map = build_taxonomy_maps(base_url)
 
@@ -285,8 +312,18 @@ def export_posts(args: argparse.Namespace) -> dict[str, Any]:
     )
     posts.sort(key=lambda item: item["date_gmt"])
 
-    print(f"Transforming {len(posts)} posts...", file=sys.stderr)
-    transformed = [
+    if args.incremental:
+        new_source_posts = [post for post in posts if post["id"] not in known_ids]
+        print(
+            f"Found {len(new_source_posts)} new post(s) on WordPress "
+            f"(remote total: {len(posts)})",
+            file=sys.stderr,
+        )
+    else:
+        new_source_posts = posts
+
+    print(f"Transforming {len(new_source_posts)} post(s)...", file=sys.stderr)
+    transformed_new = [
         transform_post(
             post,
             category_map,
@@ -297,14 +334,21 @@ def export_posts(args: argparse.Namespace) -> dict[str, Any]:
             include_tags=args.include_tags,
             featured_image=args.featured_image,
         )
-        for post in posts
+        for post in new_source_posts
     ]
 
-    return {
+    if args.incremental:
+        merged_posts = existing_posts + transformed_new
+        merged_posts.sort(key=lambda item: item["wordpress"]["published"])
+    else:
+        merged_posts = transformed_new
+
+    payload = {
         "meta": {
             "sourceSite": base_url,
             "exportedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "totalPosts": len(transformed),
+            "totalPosts": len(merged_posts),
+            "newPostsThisRun": len(transformed_new),
             "bloggerBlogId": args.blog_id,
             "defaults": {
                 "isDraft": args.draft,
@@ -318,23 +362,41 @@ def export_posts(args: argparse.Namespace) -> dict[str, Any]:
                 "Replace {access_token}, {blogId}, and {postId} placeholders before calling the API.",
             ],
         },
-        "posts": transformed,
+        "posts": merged_posts,
     }
+    return payload, transformed_new
 
 
 def main() -> int:
     args = parse_args()
     try:
-        payload = export_posts(args)
+        payload, new_posts = export_posts(args)
     except RuntimeError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
-    with open(args.output, "w", encoding="utf-8") as handle:
-        json.dump(payload, handle, ensure_ascii=False, indent=2)
-        handle.write("\n")
+    write_export(Path(args.output), payload)
 
-    print(f"Wrote {payload['meta']['totalPosts']} posts to {args.output}", file=sys.stderr)
+    if args.delta_output is not None:
+        delta_payload = {
+            "meta": {
+                **payload["meta"],
+                "totalPosts": len(new_posts),
+                "sourceExport": str(args.output),
+            },
+            "posts": new_posts,
+        }
+        write_export(args.delta_output, delta_payload)
+        print(
+            f"Wrote {len(new_posts)} new post(s) to {args.delta_output}",
+            file=sys.stderr,
+        )
+
+    print(
+        f"Wrote {payload['meta']['totalPosts']} total post(s) to {args.output} "
+        f"({payload['meta']['newPostsThisRun']} new this run)",
+        file=sys.stderr,
+    )
     return 0
 
 

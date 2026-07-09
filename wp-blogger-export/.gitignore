@@ -1,1 +1,10 @@
+# OAuth secrets and local runtime files
+client_secret*.json
+credentials.json
+token.json
+__pycache__/
+
+# Export and upload artifacts
 blogger-posts.json
+blogger-posts-new.json
+posted-state.json
