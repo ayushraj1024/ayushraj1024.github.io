@@ -23,38 +23,40 @@
 
     <h1>Privacy Policy</h1>
     <p class="legal-meta">
-      Effective date: May 24, 2026<br>
+      Effective date: July 10, 2026<br>
       Website: <a href="https://ayushraj.dev">https://ayushraj.dev</a>
     </p>
 
     <p>
       This Privacy Policy describes how Ayush Raj ("I", "me", "my") handles information
-      in connection with my personal website and related tools, including the
-      <strong>WP to Blogger CLI</strong> (a command-line utility used to export WordPress
-      posts and publish them to Blogger via the Google Blogger API).
+      in connection with my personal website and related personal automation tools,
+      including integrations with Google Blogger, LinkedIn, WordPress, and GitHub.
+      These tools are used only by me and are not offered as a public commercial service.
     </p>
 
     <section class="legal-section">
       <h2>1. Who this applies to</h2>
       <p>
-        This policy applies to visitors of this website and to me as the sole user of my
-        personal CLI tools. These tools are not offered as a public commercial service.
+        This policy applies to visitors of this website and explains how my personal
+        publishing tools handle data. These applications do not collect information from
+        other LinkedIn members, Google users, or website visitors for marketing purposes.
       </p>
     </section>
 
     <section class="legal-section">
       <h2>2. Information I collect</h2>
+
       <h3>Website visitors</h3>
       <p>
         This site is hosted on GitHub Pages. GitHub and your browser may collect standard
         technical information such as IP address, browser type, and access logs as part of
         normal web hosting. I do not operate additional analytics or advertising trackers
-        on these legal pages.
+        on this website.
       </p>
 
-      <h3>CLI and Google OAuth</h3>
+      <h3>Google / Blogger OAuth</h3>
       <p>
-        When I use the WP to Blogger CLI, the application may access:
+        When I use my Blogger publishing tools, the application may access:
       </p>
       <ul>
         <li>My Google account information needed to authenticate with Google OAuth</li>
@@ -62,9 +64,30 @@
         <li>Public WordPress post data from sites I choose to export</li>
       </ul>
       <p>
-        OAuth tokens (such as access tokens and refresh tokens) are stored locally on my
-        own computer. I do not operate a server that collects credentials or blog content
-        from other users.
+        Google OAuth tokens are stored locally on my own computer. I do not operate a
+        server that collects Google credentials or blog content from other users.
+      </p>
+
+      <h3>LinkedIn OAuth and API</h3>
+      <p>
+        When I use my LinkedIn publishing tools (including any LinkedIn Developer
+        application registered by me), the application may access and use the following
+        LinkedIn-related information for my authenticated account only:
+      </p>
+      <ul>
+        <li>Basic profile information available through LinkedIn OAuth (such as name, profile identifier, and profile URL)</li>
+        <li>Email address, if I grant the <code>email</code> scope during authorization</li>
+        <li>Permission to create posts on my personal LinkedIn profile through the <code>w_member_social</code> scope</li>
+        <li>Post content that I choose to publish (text, links, and optional media)</li>
+      </ul>
+      <p>
+        I do not use LinkedIn integrations to access LinkedIn messages, connection lists
+        for unrelated purposes, or data from other LinkedIn members beyond what is required
+        to authenticate and publish content on my own profile.
+      </p>
+      <p>
+        LinkedIn OAuth tokens (access tokens and refresh tokens) are stored locally on
+        my devices. I do not sell, rent, or share LinkedIn member data with third parties.
       </p>
     </section>
 
@@ -73,54 +96,74 @@
       <p>I use information only to:</p>
       <ul>
         <li>Display and maintain this website</li>
-        <li>Export my WordPress posts</li>
+        <li>Export content from WordPress or local Markdown files</li>
         <li>Create, update, or publish posts on my Blogger blog</li>
-        <li>Maintain authentication for automated CLI workflows</li>
+        <li>Create and publish posts on my personal LinkedIn profile</li>
+        <li>Schedule or queue content for my own publishing workflows</li>
+        <li>Maintain authentication for my personal CLI and automation tools</li>
       </ul>
-      <p>I do not sell, rent, or trade personal information.</p>
+      <p>
+        I do not use LinkedIn or Google data for advertising, profiling, lead generation,
+        or any purpose unrelated to my own content publishing.
+      </p>
     </section>
 
     <section class="legal-section">
       <h2>4. Third-party services</h2>
-      <p>The CLI and this site may interact with:</p>
+      <p>This website and my tools may interact with:</p>
       <ul>
+        <li><strong>LinkedIn API</strong> — for authenticating my account and publishing posts to my profile</li>
         <li><strong>Google / Blogger API</strong> — for blog publishing and authentication</li>
         <li><strong>WordPress.com / WordPress REST API</strong> — for reading published posts</li>
-        <li><strong>GitHub Pages</strong> — for hosting this website</li>
+        <li><strong>GitHub</strong> — for hosting this website and optional gist-based workflows</li>
       </ul>
       <p>
-        Use of Google services is also subject to
-        <a href="https://policies.google.com/privacy">Google's Privacy Policy</a>.
+        Use of third-party services is also subject to their respective policies, including
+        the <a href="https://www.linkedin.com/legal/privacy-policy">LinkedIn Privacy Policy</a>
+        and the <a href="https://policies.google.com/privacy">Google Privacy Policy</a>.
       </p>
     </section>
 
     <section class="legal-section">
       <h2>5. Data retention</h2>
       <p>
-        OAuth tokens and exported JSON files are kept locally for as long as needed to
-        complete migration or publishing tasks. I may delete them at any time. Website
-        hosting logs are retained according to GitHub's policies.
+        OAuth tokens, exported content files, and scheduled post queues are kept locally
+        for as long as needed to complete publishing tasks. I may delete them at any time.
+        Website hosting logs are retained according to GitHub's policies.
       </p>
     </section>
 
     <section class="legal-section">
       <h2>6. Security</h2>
       <p>
-        I take reasonable steps to protect OAuth credentials and exported content on my
-        local devices. Because this is a personal tool, I do not guarantee enterprise-grade
-        security. Do not share OAuth credentials or token files with others.
+        I take reasonable steps to protect OAuth credentials, token files, and exported
+        content on my local devices. Because these are personal tools, I do not guarantee
+        enterprise-grade security. OAuth tokens and API credentials should be kept private
+        and must not be shared.
       </p>
     </section>
 
     <section class="legal-section">
-      <h2>7. Your choices</h2>
+      <h2>7. Your choices and access revocation</h2>
       <p>
         If you are a visitor to this website, you can control cookies and site data through
-        your browser settings. If you authorized a Google OAuth application associated with
-        this project, you can revoke access at any time from your
-        <a href="https://myaccount.google.com/permissions">Google Account permissions</a>
-        page.
+        your browser settings.
       </p>
+      <p>
+        If you previously authorized one of my applications (for example during testing),
+        you can revoke access at any time:
+      </p>
+      <ul>
+        <li>
+          LinkedIn:
+          <a href="https://www.linkedin.com/psettings/permitted-services">Permitted services</a>
+          in your LinkedIn account settings
+        </li>
+        <li>
+          Google:
+          <a href="https://myaccount.google.com/permissions">Google Account permissions</a>
+        </li>
+      </ul>
     </section>
 
     <section class="legal-section">
